@@ -1,5 +1,3 @@
-SRCS = main.cpp ComplexNum.cpp sort.cpp
-OBJS = $(SRCS:.cpp=.o)
 all: main
 main: main.o ComplexNum.o sort.o
 	g++ -o main main.o ComplexNum.o sort.o
