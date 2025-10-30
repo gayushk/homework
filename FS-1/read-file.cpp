@@ -16,29 +16,24 @@ int main(int argc, char** argv) {
 		exit(EXIT_FAILURE);	
 	}
 	ssize_t bytes_read = read(fd, buffer, size);
-	if(bytes_read == -1) {
-		std::cerr << "error reading file" << std::endl;
-		close(fd);
-		exit(EXIT_FAILURE);	
-	}
 	while(bytes_read > 0) {
 		ssize_t written_bytes = write(1, buffer, bytes_read);
 		if(written_bytes == -1) {
-		std::cerr << "error trying to write in file" << std::endl;
-		close(fd);
-		exit(EXIT_FAILURE);	
-	}
+			std::cerr << "error trying to write in file" << std::endl;
+			close(fd);
+			exit(EXIT_FAILURE);	
+		}
 		bytes_read = read(fd, buffer, size);
 		if(bytes_read == -1) {
-		std::cerr << "error reading file" << std::endl;
-		close(fd);
-		exit(EXIT_FAILURE);	
-	}
+			std::cerr << "error reading file" << std::endl;
+			close(fd);
+			exit(EXIT_FAILURE);
+		}
 	}
 	if(bytes_read == -1) {
-                std::cerr << "error reading file" << std::endl;
-				close(fd);
-                exit(EXIT_FAILURE);
+		std::cerr << "error reading file" << std::endl;
+                close(fd);
+		exit(EXIT_FAILURE);
 	}
 	close(fd);
 
