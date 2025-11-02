@@ -22,7 +22,7 @@ void do_command(char** argv) {
 			exit(1);
 		}
 		gettimeofday(&end, nullptr);
-		double t = (end.tv_sec - start.tv_sec) + (end.tv_usec - start.tv_usec) / 1000000.0
+		double t = (end.tv_sec - start.tv_sec) + (end.tv_usec - start.tv_usec) / 1000000.0;
 		int exit_c = 0;
 		if(WIFEXITED(status)) {
 			exit_c = WEXITSTATUS(status);
