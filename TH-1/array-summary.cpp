@@ -1,68 +1,80 @@
 #include <iostream>
-#include <ctime>
 #include <stdlib.h>
-#include <thread>
-#include <vector>
+#include <ctime>
+#include <random>
+#include <pthread.h>
 
-void part_sum(const std::vector<int>& arr, unsigned long start,
-                 unsigned long end, long long res) {
-	long long sum = 0;
-	for(int i = start; i < end; ++i) {
-		sum += arr[i];
-	}
-	res = sum;
+class ThreadClass {
+public:
+    pthread_t tid;
+    int* arr;
+    int start;
+    int end;
+    int res;
+};
+
+void* ths_sum(void* arg){
+    ThreadClass* tc = (ThreadClass*) arg;
+    tc->res = 0;
+    for(int i = tc->start; i < tc->end; i++) {
+        tc->res += tc->arr[i];
+    }
+    return NULL;
+}
+
+void sum(int n, int count) {
+    int arr[n];
+    std::random_device rd;
+    std::mt19937 gen(rd());
+    std::uniform_int_distribution<int> dis(1, 10); 
+    for (int i = 0; i < n; i++) { 
+	    arr[i] = dis(gen); 
+    }
+
+    ThreadClass th_datas[count];
+    int chunk = n / count;
+
+    std::clock_t clock_start = std::clock();
+
+    for (int i = 0; i < count; ++i) {
+        th_datas[i].arr = arr;
+        th_datas[i].start = i*chunk;
+        th_datas[i].end = (i == count - 1) ? n : (i + 1) * chunk;
+        int threadCreated = pthread_create(&th_datas[i].tid, NULL, ths_sum, (void*) &th_datas[i]); 
+        if(threadCreated != 0){
+            std::cerr << "error:cannot create new thread" << std::endl;
+        }
+    }
+    long int th_sum = 0;
+    for (int i = 0; i < count; ++i) {
+        pthread_join(th_datas[i].tid, NULL);
+        th_sum += th_datas[i].res;
+    }
+    std::clock_t clock_end = std::clock();
+    double duration = 1000.0 * (clock_end - clock_start) / CLOCKS_PER_SEC;
+    std::cout << "sum with threads took " << duration << " ms" << std::endl;
+    std::cout << th_sum <<  "\n";
+
+    clock_start = std::clock();
+    long int sum = 0; 
+    for (int i = 0; i < n; i++) { 
+        sum += arr[i];
+    }
+    clock_end = std::clock();
+    duration = 1000.0 * (clock_end - clock_start) / CLOCKS_PER_SEC;
+
+    std::cout << "sum without threads took " << duration << " ms" << std::endl;
+    std::cout << sum << std::endl;
 }
 
 int main(int argc, char** argv) {
-	if(argc != 3) {
-		std::cerr << "error: invalid arguments" << std::endl;
-		exit(EXIT_FAILURE);
-	}
-	unsigned long N = std::stoul(argv[1]);
-	unsigned int M = std::stoul(argv[2]); 
-	if(N < 1000000) {
-		std::cerr << "error: invalid argument for array" << std::endl;
-		exit(EXIT_FAILURE);
-	}
-	if(M == 0) {
-		std::cerr << "error: invalid arguments" << std::endl;
-                exit(EXIT_FAILURE);
-	}
-	
-	std::vector<int> arr(N);
-	for(int i = 0; i < 100000; ++i) {
-		arr[i] = rand(); 
-	}
-	
-	clock_t start_seq = clock();
-    	long long sum_seq = 0;
-    	for (unsigned long i = 0; i < N; ++i) {
-        	sum_seq += arr[i];
-    	}
-    	clock_t end_seq = clock();
-    	double dur_seq = double(end_seq - start_seq) / CLOCKS_PER_SEC;
-	
-	clock_t start_th = clock();
-	long long sum_th = 0;
-        std::vector<std::thread> th;
-    	std::vector<long long> res(M, 0);
-	unsigned long part = N/M;
-        for (unsigned long i = 0; i < M; ++i) {
-                unsigned long st = i * part;
-		unsigned long end = (i == M - 1) ? N : st + part;
-		th.emplace_back(part_sum, std::ref(arr), st, end, std::ref(res[i]));
-        }
-	for(auto& x : th) {
-		x.join();
-	}
-	for(long long x : res) {
-		sum_th += x;
-	}
-        clock_t end_th = clock();
-	double dur_th = double(end_th - start_th) / CLOCKS_PER_SEC;
+    if (argc != 3) {
+        std::cerr << "error: invalid arguments" << std::endl;
+        exit(EXIT_FAILURE);
+    }
 
-	std::cout << "Time spent without threads: " << dur_seq << std::endl;
-    std::cout << "Time spent with " << M << " threads: " << dur_th << std::endl;
-
-	return 0;
+    int n = atoi(argv[1]);
+    int m = atoi(argv[2]);
+    sum(n, m);
+    return 0;
 }
